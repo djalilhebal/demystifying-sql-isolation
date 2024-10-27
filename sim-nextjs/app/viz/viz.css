@@ -1,0 +1,109 @@
+/**
+ * Race viz
+ * 
+ * A participant can be covered up to 360px before they are declared the winner.
+ * 
+ * It expects the 3rd participant/child to be a tortoise.
+ * Ensure you order by `id`.
+ *
+ * Participant states:
+ *   * `--inactive`
+ *   * `--winner`
+ */
+.viz {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    display: block;
+
+    --hare-color: chocolate;
+    --tortoise-color: blueviolet;
+    --tortoise-other-color: violet;
+}
+
+.viz * {
+    transform-box: border-box;
+    transform-origin: center;
+}
+
+.racetrack {
+    transform: scale(0.85);
+}
+
+.finishline {
+    transform: translate(450px, 200px);
+}
+
+.participants {
+    transform: translate(50px, 175px);
+}
+
+.tortoise {
+    fill: var(--tortoise-color);
+    stroke: white;
+    transform: translate(-19px, 20px) scale(0.35) rotate(90deg);
+    stroke-width: initial;
+}
+
+.participant-holder:nth-child(3) .tortoise {
+    fill: var(--tortoise-other-color);
+}
+
+.hare {
+    fill: var(--hare-color);
+    stroke: white;
+    transform: translate(-17px, -20px) scale(0.5);
+}
+
+.participant-holder {
+    transform: translateX(var(--distance-covered, 0px));
+    transition: transform 1s ease-out;
+}
+
+.participant-holder--inactive * {
+    fill: gray !important;
+    opacity: 0.8;
+}
+
+.participant-holder--winner .participant {
+    filter: drop-shadow(0px 0px 5px gold) drop-shadow(0px 0px 3px gold);
+}
+
+/******/
+
+.speech {
+    translate: 305px 105px;
+}
+
+.speech-icon {
+    transform: rotateY(180deg) scale(0.3) translate(-400px, 125px);
+}
+
+.speech-bubble {
+    transform: scale(0.2) translate(-540px, -710px);
+}
+
+.speech-text {
+    transform: scale(0.3);
+    translate: 120px 38px;
+}
+
+/*******/
+
+.thought {
+    translate: -20px -33px;
+}
+
+.thought-icon {
+    transform: scale(0.15);
+}
+
+.thought-bubble {
+    transform: scale(0.12);
+    transform-origin: 0 0;
+}
+
+.thought-text {
+    font-size: 4px;
+    transform: translate(10px, 10px);
+}

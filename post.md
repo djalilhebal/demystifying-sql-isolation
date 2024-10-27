@@ -1,0 +1,280 @@
+# Phanthom Reads: Reimagining The Tortoise And The Hare
+
+Tagline: Down the rabbit hole of database transactions.
+
+<!-- An interactive visualization of the database state -->
+<k-phantom-tortoise isolation="READ COMMITTED" />
+<k-phantom-tortoise isolation="SERIALIZABLE" />
+
+<aside>
+But little did they know, the tortoise was the sussest of them all.
+
+> ![](images/Tortoise_and_hare_rackham-592px.jpg)
+> "The Tortoise and the Hare", from an edition of Aesop's Fables illustrated by Arthur Rackham, 1912
+</aside>
+
+<details>
+<summary>Background</summary>
+
+## Background
+
+I originally wanted to make the metaphor about parallel universes (primary universe, tangent universes, universes being destroyed or collapsing on one another, etc.) and to reference [_Donnie Darko_][donnie-darko-imdb].
+
+<aside>
+
+![](images/donnie-darko.jpg)
+
+</aside>
+
+And omnipotent entity (say, [Glob][Glob]) define physics and time travel rules for how each universe and how it can interact with the rest of the universes and the primary universe.
+Glob is the developer/database server that define and enforce those rules.
+
+Many issues/paradoxes/chaos can happen in this fictional universe, including **Phanthom Reads**.
+
+However, my target audience (i.e. a specific person) were not familiar with those concepts, not from anime or sci-fi movies.
+
+Unlucky, but the rabbit dream had to live on.
+
+(Also, Hare > [March Hare][March_Hare] > Wonderland. It's still "on brand".)
+</details>
+
+
+## Intro
+
+TODO: Reword
+Imagine a famous fable: The Tortoise and the Hare. 
+It's the perfect setup to explain a strange anomaly in SQL called phantom reads.
+
+
+## Characters
+
+**Hare** and **Tortoise** are animal types. They are the race participants.
+
+The **Racing Commentator** or **Referee** or **Recorder** (as in Record Keeper, archivist, librarian, or rapporteur).
+The Recorder writes down facts and checkpoints.
+Only the Recorder declares the winner.
+
+The Recorder writes down current facts whenever a participant shouts "I'm done".
+When a participant shouts "I'm done", the Recorder records facts and rechecks the winner.
+
+
+### Mapping concepts
+
+- Race participants are transactions.
+Think: A transaction is a **perspective** or **world view** or **world model**.
+
+- The Recorder is the database (DBMS) and its committed state.
+It encorces isolation and consistency rules.
+When deciding the winner, we use a table `LOCK` and a `DEFERRED` trigger to simulate executing the logic "after committing"
+(it actually happens right before committing, but it's good enough for our showcase).
+
+- Shouting "I'm done" is `COMMIT;`
+
+- The Hare is surprised because it sees a new entity (the clone) that it hasn't seen before-- a phantom. A phantom read.
+
+
+- The Recorder (or Referee)'s ruleset is the isolation level
+
+- The Recorder tells one of the participats to stop and consider redoing the race when something seems off or unexpected.
+The is the transaction failing due to serialization errors, deadlocks, or other conflicts.
+
+
+## Story
+
+### Setup
+
+First, let’s imagine we have a database table named Participants. It stores info about the participants and the game state.
+```sql
+-- Act: Recorder
+CREATE TABLE participants (
+    id INTEGER PRIMARY KEY,
+    animal TEXT NOT NULL CHECK (animal IN ('tortoise', 'hare')),
+    distance_covered INTEGER NOT NULL CHECK (distance_covered BETWEEN 0 AND 360),
+    status TEXT NOT NULL CHECK (status IN ('active', 'inactive')),
+    is_winner BOOLEAN DEFAULT FALSE
+);
+```
+
+Also, the Recorder trigger that is responsible for deciding the winner.
+```sql
+-- Act: Recorder
+-- Declare the winner as soon as any participant reaches the full distance (360).
+-- To ensure this, a trigger is needed to check if there are no winners yet,
+-- and if so, mark the first participant to cover the required distance (360) as the winner.
+
+-- Create a new function for the deferred trigger
+CREATE OR REPLACE FUNCTION check_and_set_winner_deferred()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Check if there are no winners yet and update the first participant that has covered 360 units
+    UPDATE participants
+    SET is_winner = TRUE
+    WHERE id = (
+        SELECT id
+        FROM participants
+        WHERE distance_covered = 360 AND NOT is_winner
+        ORDER BY id
+        LIMIT 1
+    )
+    AND NOT EXISTS (SELECT 1 FROM participants WHERE is_winner);
+
+    RETURN NULL;  -- for AFTER triggers
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE CONSTRAINT TRIGGER track_winner_deferred_trg
+AFTER INSERT OR UPDATE ON participants
+DEFERRABLE INITIALLY DEFERRED
+FOR EACH ROW
+EXECUTE FUNCTION check_and_set_winner_deferred();
+```
+
+---
+
+### Participants
+
+At the beginning of the race, there are two participants: the Tortoise and the Hare.
+
+```sql
+-- Act: Recorder
+INSERT INTO participants (id, animal, distance_covered, status)
+    VALUES
+    (1, 'tortoise', 0, 'active'),
+    (2, 'hare', 0, 'active');
+```
+
+Everything starts off as you'd expect:
+
+- The Tortoise starts running (so to speak) and only coverts a very small units of distance.
+```sql
+-- Act: Tortoise
+--BEGIN;
+BEGIN TRANSACTION ISOLATION LEVEL READ COMMITTED;
+UPDATE participants SET distance_covered = 5 WHERE animal = 'tortoise';
+```
+
+- The hare starts running and quickly reaches the middle of the track then decides to take a nap (as the fable goes).
+Seeing that it's up against just the tortoise and that it's too behind, and feels confident. It decides to take a nap.
+```sql
+BEGIN TRANSACTION ISOLATION LEVEL READ COMMITTED;
+UPDATE participants SET distance_covered = 180 WHERE animal = 'hare';
+SELECT COUNT(*) FROM participants;
+UPDATE participants SET status = 'inactive' WHERE animal = 'hare';
+SELECT pg_sleep_for('5 seconds');
+UPDATE participants SET status = 'active' WHERE animal = 'hare';
+```
+
+Now, let’s talk about phantom reads. They happen when a transaction (in our case, the hare’s nap) sees new rows in the database that weren't there when the transaction started.
+This can mess with the hare’s understanding of the race.
+
+Meanwhile, the tortoise slowly plods along.
+
+
+```sql
+-- Simulating the hare's sleep:
+SELECT pg_sleep_for('5 seconds');
+```
+
+**Tortoise's shady move:**
+While the hare sleeps, the tortoise moves forward, slowly but steadily.
+But the tortoise isn't content to rely on just its own pace—nope, it has a secret trick.
+The tortoise inserts a Tortoise Clone into the race!
+It then declares that it's done.
+
+```sql
+UPDATE participants SET distance_covered = 6 WHERE animal = 'tortoise';
+
+-- It inserts a clone or a phantom from the perspective of another one */
+INSERT INTO participants (id, animal, distance_covered, status)
+    VALUES
+    (3, 'tortoise', 360, 'active');
+
+-- It declares that it's done.
+COMMIT;
+```
+
+The Recorder remembers that.
+
+```sql
+-- Tortoise inserts a phantom participant:
+BEGIN TRANSACTION;
+
+INSERT INTO Participants (ID, Name, DistanceCovered) VALUES (3, 'Tortoise Clone', 90);
+
+-- Tortoise continues running:
+UPDATE Participants SET DistanceCovered = 30 WHERE ID = 1;
+
+COMMIT;
+```
+
+From the tortoise's point of view, the clone is there to help out. Now there are three participants in the race:
+
+- Tortoise (ID: 1, DistanceCovered: 30)
+- Hare (ID: 2, DistanceCovered: 0)
+- Tortoise Clone (ID: 3, DistanceCovered: 90)
+
+### Hare Wakes Up: The Phantom Read
+
+The hare wakes up and asks for an update from the recorder (the database). But something strange happens—now there’s a new competitor on the track! The hare sees the Tortoise Clone that wasn’t there before.
+
+```sql
+-- Hare checks the race status again:
+SELECT * FROM participants;
+
+SELECT COUNT(*) FROM participants;
+
+-- It attempst to finish the race
+UPDATE participants SET distance_covered = 360 WHERE animal = 'hare';
+
+-- and to declare that it's done.
+COMMIT;
+```
+
+Suddenly, the hare sees:
+Tortoise (ID: 1, DistanceCovered: 30)
+Hare (ID: 2, DistanceCovered: 0)
+Tortoise Clone (ID: 3, DistanceCovered: 90)
+This Tortoise Clone is a phantom in the hare’s race—a participant that mysteriously appeared while the hare was sleeping. The hare didn’t see this clone when it first checked, and now, it’s about to lose the race!
+
+The Recorder declares the winner:
+
+Tortoise Clone (DistanceCovered: 90) is actually the one closest to the finish line. But in the narrator’s mind, it might still associate the clone with the original tortoise.
+So, while the Tortoise Clone might win, the hare is caught off guard by this unexpected phantom participant, and the race ends with a confusing surprise for the hare.
+
+What’s Happening Here?
+In database terms, the hare experienced what’s called a phantom read. It started a transaction (checking the participants) when only two participants existed. But while the hare was asleep (during its transaction), the tortoise inserted the Tortoise Clone—a new row that wasn’t visible to the hare when it began its transaction.
+
+When the hare wakes up and re-checks the participants, the clone is suddenly there, messing with the hare’s mental picture of the race. This is exactly what happens in databases when new rows appear in a table during a transaction but were invisible at the start of that transaction.
+
+Why Does This Matter?
+In databases, phantom reads can cause unexpected results when working with multiple transactions at the same time. If you're not careful about your transaction isolation level, phantoms (like our Tortoise Clone) can pop up unexpectedly, potentially causing errors, race conditions, or inconsistencies.
+
+Final Thoughts
+The tale of the tortoise and the hare becomes a perfect metaphor to explain this tricky database phenomenon. While the hare thought it was racing only one competitor, it was blind to the phantom clone entering the race. This mirrors what happens when a database transaction misses new rows added by other transactions.
+
+Moral of the story? Beware of phantom reads—they might cost you more than just a race!
+
+## Isolation levels
+
+TODO: Reword
+consequences of different isolation levels. For instance, Serializable would be the strictest "rule set" where transactions are isolated entirely, while Read Committed is much looser, allowing more overlap between transactions. The metaphor could explain more about how different levels change the race's outcome in terms of fairness, conflicts, or delays.
+
+> A transaction re-executes a query returning a set of rows that satisfy a search condition and finds that the set of rows satisfying the condition has changed due to another recently-committed transaction.
+>
+> -- Postgres
+
+
+## Final thoughts
+
+TODO: Reword
+Phantom reads are one of the trickiest anomalies to understand in SQL databases. If you're not careful, they can sneak up on you just like the Tortoise Clone in this story...
+
+
+## Takeaways
+
+...
+
+[Glob]: https://adventuretime.fandom.com/wiki/Grob_Gob_Glob_Grod
+[March_Hare]: https://en.wikipedia.org/wiki/March_Hare
+[The_Tortoise_and_the_Hare]: https://en.wikipedia.org/wiki/The_Tortoise_and_the_Hare
+[donnie-darko-imdb]: https://www.imdb.com/title/tt0246578/
