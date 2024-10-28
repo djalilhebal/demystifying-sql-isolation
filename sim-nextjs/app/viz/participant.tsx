@@ -3,7 +3,7 @@ import Hare from "./hare";
 import OmegaThought from "./OmegaThought";
 import Tortoise from "./tortoise";
 
-const Participant = ({ animal, distance_covered, status, is_winner, worldModel }: IParticipant) => {
+const Participant = ({ id, animal, distance_covered, status, is_winner, worldModel }: IParticipant) => {
     const classNameList = [
         'participant-holder',
         status === 'inactive' ? 'participant-holder--inactive' : null,
@@ -23,7 +23,10 @@ const Participant = ({ animal, distance_covered, status, is_winner, worldModel }
                 {animal === 'hare' ? <Hare /> : <Tortoise />}
             </g>
 
-            <OmegaThought texts={thoughtTexts} />
+            {
+                id > 2 ? null :
+                <OmegaThought texts={thoughtTexts} />
+            }
         </g>
 
     );

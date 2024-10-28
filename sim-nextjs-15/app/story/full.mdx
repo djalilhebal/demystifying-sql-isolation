@@ -1,18 +1,18 @@
+import Image from 'next/image';
+
+
 # Phanthom Reads: Reimagining The Tortoise And The Hare
 
-Tagline: Down the rabbit hole of database transactions.
-
-<!-- An interactive visualization of the database state -->
-<k-phantom-tortoise isolation="READ COMMITTED" />
-<k-phantom-tortoise isolation="SERIALIZABLE" />
+Down the rabbit hole of database transactions.
 
 <aside>
 But little did they know, the tortoise was the sussest of them all.
 
-> ![](images/Tortoise_and_hare_rackham-592px.jpg)
+> <Image src="/images/tortoise-and-hare-rackham.jpg" width="1734" height="2250" alt="" />
 > "The Tortoise and the Hare", from an edition of Aesop's Fables illustrated by Arthur Rackham, 1912
 </aside>
 
+<section>
 <details>
 <summary>Background</summary>
 
@@ -37,13 +37,14 @@ Unlucky, but the rabbit dream had to live on.
 
 (Also, Hare > [March Hare][March_Hare] > Wonderland. It's still "on brand".)
 </details>
+</section>
 
 
 ## Intro
 
-TODO: Reword
-Imagine a famous fable: The Tortoise and the Hare. 
-It's the perfect setup to explain a strange anomaly in SQL called phantom reads.
+Let's reimagine a famous fable: The Tortoise and the Hare. 
+
+It's the perfect setup to explain race conditions and a strange anomaly in SQL called phantom reads.
 
 
 ## Characters
@@ -71,7 +72,6 @@ When deciding the winner, we use a table `LOCK` and a `DEFERRED` trigger to simu
 - Shouting "I'm done" is `COMMIT;`
 
 - The Hare is surprised because it sees a new entity (the clone) that it hasn't seen before-- a phantom. A phantom read.
-
 
 - The Recorder (or Referee)'s ruleset is the isolation level
 
@@ -145,7 +145,7 @@ INSERT INTO participants (id, animal, distance_covered, status)
 
 Everything starts off as you'd expect:
 
-- The Tortoise starts running (so to speak) and only coverts a very small units of distance.
+- The Tortoise starts running (so to speak) and only coverts a very small distance.
 ```sql
 -- Act: Tortoise
 --BEGIN;
@@ -272,7 +272,11 @@ Phantom reads are one of the trickiest anomalies to understand in SQL databases.
 
 ## Takeaways
 
-...
+TODO:
+
+---
+
+FIN.
 
 [Glob]: https://adventuretime.fandom.com/wiki/Grob_Gob_Glob_Grod
 [March_Hare]: https://en.wikipedia.org/wiki/March_Hare

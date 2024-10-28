@@ -1,0 +1,169 @@
+# The Cautious Hare: A Better Metaphor for Phantom Reads
+
+
+## The Race Setup
+
+Imagine a race between a Hare and a Tortoise. The race track is 360 units long. The Hare, being naturally cautious, always checks its surroundings before making decisions.
+
+## Key Characters
+- The Hare (a careful transaction)
+- The Tortoise (another transaction)
+- The Recorder (the database system)
+
+## How the Race Goes
+
+1. **Starting the Race**
+   Both animals start at 0 units
+   ```sql
+   INSERT INTO participants (id, animal, distance_covered, status)
+   VALUES
+    (1, 'tortoise', 0, 'active'),
+    (2, 'hare', 0, 'active');
+
+   SELECT COUNT(*) FROM participants;  -- Returns 2
+   ```
+
+   They both begin the race:
+      ```sql
+   -- Hare:
+   BEGIN;
+   ```
+
+   ```sql
+   -- Tortoise:
+   BEGIN;
+   ```
+
+   ![](snapshots/act-1-start.png)
+
+2. **The Hare's Careful Progress**
+   ```sql
+   -- Hare jumps to middle
+   UPDATE participants SET distance_covered = 180 WHERE animal = 'hare';
+   ```
+
+   - The Hare jumps to the middle (180 units)
+   - Being cautious, it verifies:
+     - Still only two participants
+     - It's safely in the lead
+     - The Tortoise is far behind
+   ```sql
+   -- Hare double-checks the race state
+   SELECT COUNT(*) FROM participants;  -- Still 2
+   SELECT animal, distance_covered FROM participants 
+   ORDER BY distance_covered DESC;
+   -- Shows:
+   -- Hare: 180 units (in lead!)
+   -- Tortoise: 5 units
+   ```
+
+   ![](snapshots/act-2-hare-jump.png)
+
+3. **The Confident Nap**
+   ```sql
+   -- Hare decides it's safe to nap
+   UPDATE participants SET status = 'inactive' WHERE animal = 'hare'; -- Impl detail: Just to track and visualize the state
+   SELECT pg_sleep_for('5 seconds');  -- Taking a nap
+   ```
+   - Feeling confident after its checks, the Hare decides to take a nap
+   This is like a transaction pausing during execution.
+   ![](snapshots/act-3-hare-sleep.png)
+
+4. **The Tortoise's Sneaky Move**
+   - Meanwhile, Tortoise decides to use a shortcut (or a trick) to reach its goal.
+   While the Hare sleeps, the Tortoise inserts a Tortoise Clone at the finish line.
+   ```sql
+   -- Tortoise:
+   INSERT INTO participants (id, animal, distance_covered, status)
+       VALUES (3, 'tortoise', 360, 'active');
+   ```
+   ![](snapshots/act-4-tortoise-clone.png)
+
+   - The tortoise declares that it is done (`COMMIT`s).
+   The Clone is committed to the race.
+   The referee sees that a tortoise is at the finishline and declares it the winner.
+   ```sql
+   -- Tortoise:
+   COMMIT;
+   ```
+   ![](snapshots/act-5-tortoise-win.png)
+
+5. **The Hare's Confusion**
+   - The Hare wakes up and checks again:
+   ```sql
+   -- Hare:
+   SELECT COUNT(*) FROM participants;  -- Now shows 3!
+
+   SELECT animal, distance_covered FROM participants ORDER BY distance_covered DESC;
+   -- Shows:
+   -- Tortoise Clone: 360 units (What!?)
+   -- Hare: 180 units
+   -- Tortoise: 6 units
+   ```
+   - Despite its earlier careful checks, it finds:
+     - Now there are three participants!
+     - A Tortoise Clone is at the finish line!
+     - Its lead is gone
+   ![](snapshots/act-6-hare-confused.png)
+
+6. **The Phantom Read Reality**
+   - Even though the Hare was cautious and checked everything before napping
+   - Even though it confirmed it was in the lead
+   - A phantom participant still appeared during its transaction
+   - All its careful checks couldn't prevent this surprise
+
+Swiftly, the hare jumps to the finish line, but the outcome wouldn't change. This is unexpected and unfair.
+![](snapshots/act-7-hare-commit.png)
+
+
+## About this metaphor
+
+1. **Transaction Behavior**
+   - The Hare's cautious checks represent how real database transactions often verify conditions before proceeding.
+   - The `SELECT COUNT(*)` and position checks are like typical database validations.
+
+2. **False Sense of Security**
+   - Just like the Hare felt safe after its checks, transactions might feel secure after initial validations.
+   - But in lower isolation levels, this security may not be enough.
+
+3. **Phantom Read Impact**
+   - The Hare's surprise mirrors the exact problem with phantom reads:
+     - Initial checks pass.
+     - Transaction proceeds based on those checks.
+     - New data appears unexpectedly.
+     - Previous assumptions become invalid.
+     - The final outcome may be unexpected or goes against (business) rules.
+
+### Real-World Parallel
+
+Imagine an e-commerce system:
+- Check inventory (like Hare checking race state)
+- Confirm enough items available (like Hare confirming its lead)
+- Process order (like Hare taking a nap)
+- Find out new orders appeared meanwhile (like discovering the Tortoise Clone)
+
+
+## Solutions
+
+### With the help of the database
+
+This is why databases offer different isolation levels:
+
+- `READ COMMITTED` (our story's scenario): Allows phantom reads.
+
+- `SERIALIZABLE`: Would prevent the Tortoise from adding a Clone during the Hare's transaction.
+The **Referee** (database) would tell affected participants (transacions) that something is off about their previous assumptions and that they should redo the race.
+
+### Taking matters into our hands
+
+The Hare could handle this issue by rechecking its assumptions as it progresses. If it notices something amiss, it could try to recuperate or take corrective measures, rather than throwing out all its progress once it finally reaches the finish line. This kind of self-check allows the Hare to adapt mid-race rather than starting over from scratch.
+
+This approach is similar to how databases work: they allow transactions to carry on even if they might be "doomed" to fail. The database (like the referee) doesn’t intervene mid-transaction, even if it detects that a conflict could eventually lead to a rollback. Even in SERIALIZABLE transactions, databases might let things proceed until final validation, preventing unnecessary early rollbacks and allowing the transaction to handle potential issues through recovery measures if it chooses.
+
+## Takeaways
+
+The Hare's cautious nature actually makes the phantom read problem more evident—even careful checking isn't enough without proper isolation levels.
+
+---
+
+FIN.

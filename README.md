@@ -38,7 +38,7 @@ Software visualization, simulation, interactive article.
 - ~~Vue 3~~
     * Why not: Could not get `pgmock` to work correctly with Vite.
 
-- NextJS 14
+- NextJS 15 https://nextjs.org/
 ```js next.config.mjs
 const nextConfig = {
   output: "export",
@@ -56,29 +56,13 @@ const nextConfig = {
 ```
 
 - [Jotai](https://github.com/pmndrs/jotai): Primitive and flexible state management for React.
+  * [ ] https://jotai.org/docs/utilities/family
 
-- [ ] react-syntax-highlighter
-  * https://react-syntax-highlighter.github.io/react-syntax-highlighter/demo/prism.html
+- [x] react-syntax-highlighter
   * Prisma.js themes: `dracula`, `gruvbox-light`, or `gruvbox-dark`.
+    Demo: https://react-syntax-highlighter.github.io/react-syntax-highlighter/demo/prism.html
 
 - [ ] Radix UI Themes `npm:@radix-ui/themes`
-
-
-## Implementation details
-
-### Using wa-sqlite
-
-We define our custom function `ki_sleep`.
-I tried to come up with something like `pg_sleep`.
-See [the **Delaying Execution** section of **Date/Time Functions and Operators**](https://www.postgresql.org/docs/current/functions-datetime.html#FUNCTIONS-DATETIME-DELAY).
-
-We use `create_function`, as seen in [its test file](https://github.com/rhashimoto/wa-sqlite/blob/bfbbc6a88038185460b30f46f15f97b1c85ee253/test/callbacks.test.js).
-
-We use multiple workers to simulate multiple connections/clients.
-
-### Remarks
-
-- Ki is for Kaito, Kite, or Ki the energy thingy.
 
 
 ## Credits
