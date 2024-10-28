@@ -1,5 +1,3 @@
-import React from 'react';
-
 const Hare = () => (
     <g className='hare'>
       <path d="M62.6,23.5L46,9.5c-1.5,2.7-1.7,6-0.5,8.9L62.6,23.5z" />

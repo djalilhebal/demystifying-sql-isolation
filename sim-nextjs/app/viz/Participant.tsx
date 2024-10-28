@@ -1,7 +1,8 @@
 import { generateThoughts, IParticipant } from "../common";
-import Hare from "./hare";
+
+import Hare from "./Hare";
+import Tortoise from "./Tortoise";
 import OmegaThought from "./OmegaThought";
-import Tortoise from "./tortoise";
 
 const Participant = ({ id, animal, distance_covered, status, is_winner, worldModel }: IParticipant) => {
     const classNameList = [
@@ -11,6 +12,7 @@ const Participant = ({ id, animal, distance_covered, status, is_winner, worldMod
     ].filter(Boolean).join(' ');
 
     const thoughtTexts = generateThoughts(worldModel!);
+    const shouldShowThought = id === 1 || id === 2;
 
     return (
         <g
@@ -21,12 +23,9 @@ const Participant = ({ id, animal, distance_covered, status, is_winner, worldMod
         >
             <g className="participant">
                 {animal === 'hare' ? <Hare /> : <Tortoise />}
-            </g>
 
-            {
-                id > 2 ? null :
-                <OmegaThought texts={thoughtTexts} />
-            }
+                {shouldShowThought ? <OmegaThought texts={thoughtTexts} /> : null}
+            </g>
         </g>
 
     );

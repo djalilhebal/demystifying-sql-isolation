@@ -38,11 +38,14 @@
     transform: translate(50px, 175px);
 }
 
+.participant:has(.tortoise) {
+    transform: translate(-19px, 20px);
+}
+
 .tortoise {
     fill: var(--tortoise-color);
     stroke: white;
-    transform: translate(-19px, 20px) scale(0.35) rotate(90deg);
-    stroke-width: initial;
+    transform: scale(0.35) rotate(90deg);
 }
 
 .participant-holder:nth-child(3) .tortoise {
@@ -83,15 +86,14 @@
     transform: scale(0.2) translate(-540px, -710px);
 }
 
-.speech-text {
-    transform: scale(0.3);
-    translate: 120px 38px;
+.speech text {
+    transform: scale(0.3) translate(180px, 40px);
 }
 
 /*******/
 
 .thought {
-    translate: -20px -33px;
+    translate: -8px -25px;
 }
 
 .thought-icon {
@@ -103,7 +105,21 @@
     transform-origin: 0 0;
 }
 
-.thought-text {
+.thought text {
     font-size: 4px;
-    transform: translate(10px, 10px);
+    transform: translate(8px, 8px);
+}
+
+/**********/
+
+.thought > *, .speech > * {
+    opacity: 0.2;
+}
+
+.thought:hover text, .speech:hover text {
+    opacity: 1;
+}
+
+.tortoise ~ .thought {
+    translate: 15px 0px;
 }

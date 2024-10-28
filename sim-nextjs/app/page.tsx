@@ -2,9 +2,8 @@
 
 import "./page.css";
 
-import Viz from "./viz/viz";
-import { useState } from "react";
 import { IGameState, IParticipant, IWorldModel } from "./common";
+import Viz from "./viz/Viz";
 
 const FINAL_PARTICIPANTS_STATE: IParticipant[] = [
   { id: 1, animal: 'hare', distance_covered: 180, status: 'active', is_winner: false },
@@ -26,13 +25,8 @@ const gameState: IGameState = {
 
 export default function Home() {
 
-  const [isolation, setIsolation] = useState("READ COMMITTED");
-
   return (
     <main>
-      <h1>Phantom Tortoise</h1>
-
-      Selected isolation level: {isolation}
 
       <Viz gameState={gameState} />
 

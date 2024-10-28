@@ -1,10 +1,10 @@
 import { IGameState } from '../common';
-import FinishLine from './finishline';
-import Racetrack from './racetrack';
-import Participant from './participant';
+import Finishline from './Finishline';
+import Racetrack from './Racetrack';
+import Participant from './Participant';
 import OmegaSpeech from './OmegaSpeech';
 
-import './viz.css';
+import './Viz.css';
 
 const Viz = ({ gameState }: { gameState: IGameState }) => {
   const { participants } = gameState;
@@ -18,9 +18,10 @@ const Viz = ({ gameState }: { gameState: IGameState }) => {
       version="1.1"
     >
       <g className="scene">
+
         <Racetrack />
-        <FinishLine />
-        <OmegaSpeech />
+        <Finishline />
+        <OmegaSpeech texts={['Omega thought 1', 'Another omega huge thought']} />
         <g className="participants">
           {
             participants.map((participant) => (

@@ -1,5 +1,3 @@
-import React from 'react';
-
 const Tortoise = () => (
     <g className='tortoise'>
         <path d="m17.812 32.344h-12.969c0.78125-4.375 4.6875-7.6562 9.2188-7.6562h8.125c-1.7188 2.3438-3.125 5-4.375 7.6562z" />
