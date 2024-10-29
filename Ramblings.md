@@ -2,6 +2,51 @@
 
 Add: Referee y9oul l Hare, "7aja anormal srat, alors 3awad l match wella jsp."
 
+What perspective to use?
+What if we draw a scene for each perspective, but only the referee's classes have opacity = 1?
+If the referee and a participant's perspective are the same, they will be superimposed on one another.
+
+```ts
+{ // Mixed perspectives:
+
+  const PARTICIPANTS_START: IParticipant[] = [
+    { id: 1, animal: 'hare', distance_covered: 0, status: 'active', is_winner: false },
+    { id: 2, animal: 'tortoise', distance_covered: 0, status: 'active', is_winner: false },
+  ];
+
+  const PARTICIPANTS_BEFORE_HARE_SLEEPS: IParticipant[] = [
+    { id: 1, animal: 'hare', distance_covered: 180, status: 'active', is_winner: false },
+    { id: 2, animal: 'tortoise', distance_covered: 5, status: 'active', is_winner: false },
+  ];
+
+  const PARTICIPANTS_WHEN_HARE_SLEEPS: IParticipant[] = [
+    { id: 1, animal: 'hare', distance_covered: 180, status: 'inactive', is_winner: false },
+    { id: 2, animal: 'tortoise', distance_covered: 10, status: 'active', is_winner: false },
+    { id: 3, animal: 'tortoise', distance_covered: 360, status: 'active', is_winner: true },
+  ];
+
+  const PARTICIPANTS_AFTER_HARE_SLEEPS: IParticipant[] = [
+    { id: 1, animal: 'hare', distance_covered: 180, status: 'active', is_winner: false },
+    { id: 2, animal: 'tortoise', distance_covered: 10, status: 'active', is_winner: false },
+    { id: 3, animal: 'tortoise', distance_covered: 360, status: 'active', is_winner: true },
+  ];
+
+  const PARTICIPANTS_FINAL: IParticipant[] = [
+    { id: 1, animal: 'hare', distance_covered: 360, status: 'active', is_winner: false },
+    { id: 2, animal: 'tortoise', distance_covered: 10, status: 'active', is_winner: false },
+    { id: 3, animal: 'tortoise', distance_covered: 360, status: 'active', is_winner: true },
+  ];
+  
+  const story = [
+    PARTICIPANTS_START,
+    PARTICIPANTS_BEFORE_HARE_SLEEPS,
+    PARTICIPANTS_WHEN_HARE_SLEEPS,
+    PARTICIPANTS_AFTER_HARE_SLEEPS,
+    PARTICIPANTS_FINAL,
+  ];
+}
+```
+
 ## Art and narratives
 
 How do artists depict multiple realities within a single canvas? Imagine a scene where, in one reality, a character is seated, in another, they are standing, and in a third, they are walking. All these moments exist simultaneously in one composition, creating a layered, multifaceted narrative.

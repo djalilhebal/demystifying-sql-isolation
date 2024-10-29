@@ -1,8 +1,8 @@
-import { atom, getDefaultStore } from 'jotai';
 import { PostgresMock } from 'pgmock';
 import { Client } from "pg";
+import { atom, getDefaultStore } from 'jotai';
 
-import { IParticipant, IWorldModel, RaceActor } from '../common';
+import { IParticipant, IWorldModel, RaceActor } from '../core';
 
 type Atom<T> = ReturnType<typeof atom<T>>;
 

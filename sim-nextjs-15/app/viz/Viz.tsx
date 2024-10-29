@@ -1,4 +1,5 @@
-import { IGameState } from '../common';
+import { ISimState } from '../core';
+
 import Finishline from './Finishline';
 import Racetrack from './Racetrack';
 import Participant from './Participant';
@@ -6,8 +7,8 @@ import OmegaSpeech from './OmegaSpeech';
 
 import './Viz.css';
 
-const Viz = ({ gameState }: { gameState: IGameState }) => {
-  const { participants } = gameState;
+const Viz = ({ simState }: { simState: ISimState }) => {
+  const { participants } = simState.perspectives.referee;
 
   return (
     <svg

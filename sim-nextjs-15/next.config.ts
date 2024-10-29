@@ -4,7 +4,17 @@ import createMDX from '@next/mdx'
 const nextConfig = {
   // Configure `pageExtensions` to include markdown and MDX files
   pageExtensions: ['js', 'jsx', 'md', 'mdx', 'ts', 'tsx'],
-  // Optionally, add any other Next.js config below
+  output: "export",
+  webpack: (config) => {
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      fs: false,
+      dns: false,
+      net: false,
+      tls: false,
+    };
+    return config;
+  },
 }
  
 const withMDX = createMDX({

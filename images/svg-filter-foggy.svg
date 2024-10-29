@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">
+  <!-- Define the filter -->
+  <defs>
+    <filter id="foggyWindow" x="-50%" y="-50%" width="200%" height="200%">
+      <!-- Create noise texture -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.7" numOctaves="3" seed="5" result="noise"/>
+      
+      <!-- Threshold the noise to create a more distinct pattern -->
+      <feColorMatrix type="matrix" 
+        values="1 0 0 0 0
+                0 1 0 0 0
+                0 0 1 0 0
+                0 0 0 9 -5" 
+        result="thresholdNoise"/>
+      
+      <!-- Create displacement map from noise -->
+      <feDisplacementMap in="SourceGraphic" in2="thresholdNoise" scale="3" xChannelSelector="R" yChannelSelector="G" result="displaced"/>
+      
+      <!-- Blur slightly to soften edges -->
+      <feGaussianBlur stdDeviation="1" result="blurred"/>
+      
+      <!-- Blend with original -->
+      <feBlend mode="multiply" in="blurred" in2="displaced"/>
+    </filter>
+  </defs>
+
+  <!-- Example shapes to demonstrate the filter -->
+  <g filter="url(#foggyWindow)">
+    <circle cx="100" cy="150" r="50" fill="purple"/>
+    <rect x="200" y="100" width="100" height="100" fill="teal"/>
+    <path d="M300,150 L350,200 L250,200 Z" fill="orange"/>
+  </g>
+</svg>

@@ -1,24 +1,11 @@
 export type RaceActor = 'hare' | 'tortoise' | 'referee';
 
-export const RACE_ACTORS: RaceActor[] = ['hare', 'tortoise', 'referee'];
-
 export interface IParticipant {
     id: number;
     animal: string;
     distance_covered: number;
     status: 'active' | 'inactive';
     is_winner: boolean;
-
-    // ---
-
-    worldModel?: IWorldModel;
-}
-
-// TODO: TBD: Whose perspective is it?
-// What if we draw a scene for each perspective, but only the referee's classes have opacity = 1?
-// If the referee and a participant's perspective are the same, they will be superimposed on one another.
-export interface IGameState {
-    participants: IParticipant[];
 }
 
 export interface IWorldModel {
@@ -33,6 +20,13 @@ export interface IWorldModel {
      * Detected by Hare or Tortoise.
      */
     anomalyDetected: boolean;
+}
+
+export interface ISimState {
+    /**
+     * World models.
+     */
+    perspectives: Record<RaceActor, IWorldModel>;
 }
 
 export function generateThoughts(worldModel: IWorldModel): string[] {

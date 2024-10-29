@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">
+  <defs>
+    <!-- Create pattern of diagonal lines -->
+    <pattern id="diagonalHatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <!-- Multiple lines with different widths and spacings -->
+      <line x1="-2" y1="2" x2="10" y2="2" stroke="black" stroke-width="0.5" />
+      <line x1="-2" y1="4" x2="10" y2="4" stroke="black" stroke-width="0.3" />
+      <line x1="-2" y1="6.5" x2="10" y2="6.5" stroke="black" stroke-width="0.7" />
+    </pattern>
+
+    <!-- Main sketch filter -->
+    <filter id="pencilSketch" x="-20%" y="-20%" width="140%" height="140%">
+      <!-- Create a displacement map for wobbly effect -->
+      <feTurbulence type="turbulence" baseFrequency="0.05" numOctaves="2" result="displacement"/>
+      
+      <!-- Apply displacement to make lines less regular -->
+      <feDisplacementMap in="SourceGraphic" in2="displacement" scale="2" xChannelSelector="R" yChannelSelector="G" result="displacedGraphic"/>
+      
+      <!-- Convert filled shapes to outlines -->
+      <feMorphology operator="dilate" radius="1" result="thicker"/>
+      <feMorphology in="SourceGraphic" operator="erode" radius="0.5" result="thinner"/>
+      <feComposite operator="out" in="thicker" in2="thinner" result="outlines"/>
+      
+      <!-- Apply hatching -->
+      <feFlood flood-color="black" result="black"/>
+      <feComposite in="black" in2="outlines" operator="in"/>
+    </filter>
+  </defs>
+
+  <!-- Example shapes to demonstrate the filter -->
+  <g>
+    <!-- Background shape with hatching pattern -->
+    <rect x="50" y="50" width="100" height="100" fill="url(#diagonalHatch)"/>
+    <rect x="50" y="50" width="100" height="100" fill="url(#diagonalHatch)"/>
+    <circle cx="250" cy="100" r="50" fill="url(#diagonalHatch)"/>
+    <path d="M150 200 L250 200 L200 250 Z" fill="url(#diagonalHatch)"/>
+    
+    <!-- Filtered shapes -->
+    <g filter="url(#pencilSketch)">
+      <rect x="50" y="50" width="100" height="100" fill="black"/>
+      <circle cx="250" cy="100" r="50" fill="black"/>
+      <path d="M150 200 L250 200 L200 250 Z" fill="black"/>
+    </g>
+  </g>
+</svg>
